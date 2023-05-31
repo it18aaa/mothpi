@@ -15,11 +15,13 @@ import socket
 #         poss do recording in worker thread
 #         push or pull data / REST API or http front end?
 
+
 audio_format = pyaudio.paInt16
 number_of_channels = 1
 sample_rate = 48000
 chunk_size = 4096
-duration = 60
+duration = 55
+
 
 #filename = 'testxxx.wav'
 
