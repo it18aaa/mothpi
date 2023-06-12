@@ -1,0 +1,5 @@
+cffi==1.15.1
+numpy==1.24.3
+PyAudio==0.2.13
+pycparser==2.21
+PySoundFile==0.9.0.post1

@@ -1,0 +1,11 @@
+client_secrets.json
+credentials.json
+settings.yaml
+*.wav
+*.flac
+.#*
+#*
+*#
+*~
+venv/
+secrets.zip
