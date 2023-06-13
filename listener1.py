@@ -26,15 +26,13 @@ audio_format = pyaudio.paInt16
 number_of_channels = 1
 sample_rate = 48000
 chunk_size = 4096
-duration = 10                         # should be set to 60
+duration = 10                        # should be set to 60
 recording_hours = 1
 iterations = 5
-
 
 #create pyadio instance and search for the audiomoth
 
 audio = pyaudio.PyAudio()
-
 
 def get_audiomoth_index() :
     device_index = None
@@ -43,7 +41,6 @@ def get_audiomoth_index() :
             device_index = i
             break
     return device_index
-
 
 def get_filename():
     now = datetime.now()
@@ -114,13 +111,11 @@ for i in range(1, iterations):
 
     stream.stop_stream()
 
-
     write_wav(filename=fname_wav,
               data=data,
               num_channels=number_of_channels,
               sample_rate=sample_rate,
               audio_format=audio_format) 
-
 
     write_flac(filename=fname_flac,
                data=data,
@@ -138,10 +133,6 @@ for i in range(1, iterations):
     file1 = drive.CreateFile()
     file1.SetContentFile(fname_flac)
     file1.Upload()
-
-
-
-
 
 print('Finished recording')
 
