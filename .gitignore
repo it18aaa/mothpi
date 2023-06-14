@@ -9,3 +9,6 @@ settings.yaml
 *~
 venv/
 secrets.zip
+creds.zip
+oldcreds/
+

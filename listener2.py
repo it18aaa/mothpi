@@ -11,7 +11,7 @@ import gc
 # adapted from script on AudioMoth USB Microphone site
 #
 #  TODO:  Init(), Close() etc..
-#         ntp sync
+#         ntp sync?
 #         heartbeat?
 #         crash recover?
 #         flac ->  
@@ -26,8 +26,9 @@ number_of_channels = 1
 sample_rate = 48000
 chunk_size = 4096
 duration = 60                        # should be set to 60
-recording_hours = 1
-iterations = 60
+recording_hours = 3
+iterations = recording_hours * duration
+data_dir = "data/"
 
 #create pyadio instance and search for the audiomoth
 
@@ -78,7 +79,7 @@ print(f"AudioMoth device found at index {device_index}")
 
 print("Opening pyaudio stream")
 
-# create pyaudio stream
+# create pyaudio stream, but dont start it
 stream = audio.open(format=audio_format,
                     rate=sample_rate,
                     channels=number_of_channels,
