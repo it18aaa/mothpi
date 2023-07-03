@@ -10,29 +10,20 @@ from pydrive.drive import GoogleDrive
 import requests
 import gc
 import subprocess
+import fcntl
 
 audio_format = pyaudio.paInt16
 number_of_channels = 1
 sample_rate = 48000
 chunk_size = 4096
-duration = 10                        # should be set to 60
+duration = 20                        # should be set to 60
 recording_hours = 1
-iterations = 5  #recording_hours * duration
+iterations = 10  #recording_hours * duration
 data_dir = "data"
 
 #create pyadio instance and search for the audiomoth
 
 audio = pyaudio.PyAudio()
-
-###  we are not uploading in the listener app anymore!
-#def connected() -> bool:
-#    url = "http://www.google.com"
-#    timeout = 1
-#    try:
-#        request = requests.get(url, timeout=timeout)
-#        return True
-#    except (requests.ConnectionError, requests.Timeout) as exception:
-#        return False
 
 def get_audiomoth_index() :
     device_index = None
@@ -58,8 +49,7 @@ def add_to_pending(filename):
     pending = open("pending.txt", "a")    
     pending.write(f"{filename}\n")
     pending.close()
-
-    
+ 
 device_index = get_audiomoth_index()
 
 if device_index == None:
@@ -110,7 +100,9 @@ for i in range(1, iterations):
     # upload the file
 
     add_to_pending(os.path.join(data_dir, fname_flac))
-    subprocess.Popen(["python","gdrive-caretaker.py","&"])
+
+    # start the uploader as a separate process in the background
+    subprocess.Popen(["python","gdrive-upload.py","&","disown"])
     
 print('Finished recording')
 

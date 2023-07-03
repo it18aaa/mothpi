@@ -13,6 +13,7 @@ def connected() -> bool:
         return True
     except (requests.ConnectionError, requests.Timeout) as exception:
         return False
+
     
 if not connected():
     print("No internet")
@@ -28,29 +29,32 @@ drive = GoogleDrive(gauth)
 #load list of pending uploads
 files_list = set(line.strip() for line in open('pending.txt'))
 
-new_files_list = files_list.copy()
+uploaded_list = set()
 files_uploaded = 0
 
 
-#  for every file in the list, test connection, check file exists, upload!
-# then remove that filename from the set of pending uploads
-
+#  for every file in the list,
+#  test connection, check file exists, and then upload
+#  if successful upload, add to list
+#
 for filename in files_list:
     print(filename)
     if connected():
+        # TODO: refactor this into its own func?
+
         if os.path.isfile(filename):
             try:
                 drive_file = drive.CreateFile({'title': filename})
                 drive_file.SetContentFile(filename)
                 drive_file.Upload()
-                new_files_list.remove(filename)
+                #  this isn't ideal, need a better way to test
+                uploaded_list.add(filename)
                 files_uploaded += 1
             except Exception as ex:
                 print(f"couldn't upload {filename}")
                 print(str(ex))
             finally:
-                drive_file.content.close()
-                
+                drive_file.content.close()                
         else:
             print(f"{filename} not found")
     else:
@@ -58,10 +62,20 @@ for filename in files_list:
         
 print(f"{files_uploaded} files uploaded")
 
-# write the set of pending uploads
+
+# Absorb any changes to the original file list
+# create a left over list that wasn't uploaded!
 #
+# TODO: file locking to make this operation atomic
+#
+updated_files_list = set(line.strip() for line in open('pending.txt'))
+all_files = files_list.union(updated_files_list)
+left_over_files  = all_files.difference(uploaded_list)
+
 pending = open("pending.txt", "w")
-for line in new_files_list:
-    f.write(f"{line}\n")
+for line in left_over_files:
+    pending.write(f"{line}\n")
+
+pending.close()
 
     
