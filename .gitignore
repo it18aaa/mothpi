@@ -11,4 +11,5 @@ venv/
 secrets.zip
 creds.zip
 oldcreds/
-
+old_data/
+data/

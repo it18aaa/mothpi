@@ -1,0 +1,11 @@
+MothPI Todo bits:-
+
+listener: lock and unlock pending on write
+
+uploader: lock and unlock pending on uploader read - is this needed?
+uploader: lock/unlock on pending read
+uploader: file upload - test upload status before updating file set
+uploader: merge changes to pending on uploader write (may have been altered)
+uploader: lock and unlock pending on uploader write
+
+listener:  using subprocess.Popen seems to work okay, but maybe os.system(".... ") disown may work better

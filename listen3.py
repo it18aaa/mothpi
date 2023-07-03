@@ -7,33 +7,32 @@ import soundfile as sf
 import socket
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
+import requests
 import gc
-
-# adapted from script on AudioMoth USB Microphone site
-#
-#  TODO:  Init(), Close() etc..
-#         ntp sync?
-#         heartbeat?  
-#         crash recover?
-#         flac ->  
-#         builtin scheduler or Cron job
-#         exceptions around writing files/opening closing hw
-#         how to stream on demand and record in same thread 
-#         poss do recording in worker thread
-#         push or pull data / REST API or http front end?
+import subprocess
 
 audio_format = pyaudio.paInt16
 number_of_channels = 1
 sample_rate = 48000
 chunk_size = 4096
-duration = 60                        # should be set to 60
-recording_hours = 3
-iterations = recording_hours * duration
+duration = 10                        # should be set to 60
+recording_hours = 1
+iterations = 5  #recording_hours * duration
 data_dir = "data"
 
 #create pyadio instance and search for the audiomoth
 
 audio = pyaudio.PyAudio()
+
+###  we are not uploading in the listener app anymore!
+#def connected() -> bool:
+#    url = "http://www.google.com"
+#    timeout = 1
+#    try:
+#        request = requests.get(url, timeout=timeout)
+#        return True
+#    except (requests.ConnectionError, requests.Timeout) as exception:
+#        return False
 
 def get_audiomoth_index() :
     device_index = None
@@ -47,29 +46,20 @@ def get_filename():
     now = datetime.now()
     return socket.gethostname() + "-" + now.strftime("%Y-%m-%dT%H%M%S")
 
-
 def write_flac(filename, data, sample_rate, dtype):
     #  convert data to np array
     npdata = np.frombuffer(b''.join(data), dtype=dtype)
-    
     sf.write(filename, npdata, sample_rate)
     # kludge to close the sf.file handle
-    # might as well use it to clear
     gc.collect() 
 
+def add_to_pending(filename):
+    # this should use locking !
+    pending = open("pending.txt", "a")    
+    pending.write(f"{filename}\n")
+    pending.close()
 
-def write_wav(filename, data, num_channels, sample_rate, audio_format):
-    # save the audio data as a wav file,
-    # -- could loop this yay many times, eg 60 for an hour?
-    # -- and maintain state
-    # -- or a script that could be run once a minute through cron?
-    wav = wave.open(fname_wav, 'wb')
-    wav.setnchannels(number_of_channels)
-    wav.setsampwidth(audio.get_sample_size(audio_format))
-    wav.setframerate(sample_rate)
-    wav.writeframes(b''.join(data))
-    wav.close()
-
+    
 device_index = get_audiomoth_index()
 
 if device_index == None:
@@ -112,30 +102,16 @@ for i in range(1, iterations):
 
     stream.stop_stream()
 
-    # write out data to disk
-    write_wav(filename=os.path.join(data_dir, fname_wav),
-              data=data,
-              num_channels=number_of_channels,
-              sample_rate=sample_rate,
-              audio_format=audio_format) 
-
     write_flac(filename=os.path.join(data_dir, fname_flac),
                data=data,
                sample_rate=sample_rate,
                dtype=np.int16)
     
     # upload the file
-    # can this be farmed out to another thread / subsystem
 
-    gauth = GoogleAuth()
-    drive = GoogleDrive(gauth)
-
-#    folder = '1oQYJ_aOY3MCzdMNNrJnt43SLuASKF19S'
-
-    file1 = drive.CreateFile({'title': fname_flac})
-    file1.SetContentFile(os.path.join(data_dir, fname_flac))
-    file1.Upload()
-
+    add_to_pending(os.path.join(data_dir, fname_flac))
+    subprocess.Popen(["python","gdrive-caretaker.py","&"])
+    
 print('Finished recording')
 
 stream.stop_stream()
