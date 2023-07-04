@@ -3,6 +3,9 @@ from pydrive.drive import GoogleDrive
 import os
 import requests
 
+
+pending_file = "pending.txt"
+
 ###  function to test internet connection
 #
 def connected() -> bool:
@@ -27,7 +30,7 @@ gauth = GoogleAuth()
 drive = GoogleDrive(gauth)
 
 #load list of pending uploads
-files_list = set(line.strip() for line in open('pending.txt'))
+files_list = set(line.strip() for line in open(pending_file))
 
 uploaded_list = set()
 files_uploaded = 0
@@ -41,10 +44,12 @@ for filename in files_list:
     print(filename)
     if connected():
         # TODO: refactor this into its own func?
-
+        # uploads may be very slow, so perhaps update the pending.txt after every upload?
+        #
         if os.path.isfile(filename):
             try:
-                drive_file = drive.CreateFile({'title': filename})
+                head_tail = os.path.split(filename)
+                drive_file = drive.CreateFile({'title': head_tail[1]})
                 drive_file.SetContentFile(filename)
                 drive_file.Upload()
                 #  this isn't ideal, need a better way to test
@@ -63,16 +68,18 @@ for filename in files_list:
 print(f"{files_uploaded} files uploaded")
 
 
+
+
 # Absorb any changes to the original file list
 # create a left over list that wasn't uploaded!
 #
 # TODO: file locking to make this operation atomic
 #
-updated_files_list = set(line.strip() for line in open('pending.txt'))
+updated_files_list = set(line.strip() for line in open(pending_file))
 all_files = files_list.union(updated_files_list)
 left_over_files  = all_files.difference(uploaded_list)
 
-pending = open("pending.txt", "w")
+pending = open(pending_file, "w")
 for line in left_over_files:
     pending.write(f"{line}\n")
 
