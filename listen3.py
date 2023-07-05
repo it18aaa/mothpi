@@ -17,8 +17,8 @@ number_of_channels = 1
 sample_rate = 48000
 chunk_size = 4096
 duration = 60                        # should be set to 60
-recording_hours = 1
-iterations = 10  #recording_hours * duration
+recording_hours = 3
+iterations = recording_hours * duration
 data_dir = "data"
 
 #create pyadio instance and search for the audiomoth

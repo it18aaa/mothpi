@@ -12,4 +12,5 @@ secrets.zip
 creds.zip
 oldcreds/
 old_data/
-data/
+data/*.flac
+data/*.wav
